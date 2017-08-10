@@ -1,66 +1,67 @@
-Custom Images Pipeline for Scrapy
+Single Image Pipeline for Scrapy
 ==================================================
 
-Get inspiration from https://stackoverflow.com/questions/18081997/scrapy-customize-image-pipeline-with-renaming-defualt-image-name
+CHANGES FROM OFFICIAL TO MINE
+
+IMAGES_STORE
+    <IMAGES_STORE>/full/<image_id>.jpg ==> <IMAGES_STORE>/<SPIDER_NAME>/full/<image_id>.jpg
+
+IMAGES URLS FIELD
+    item['image_urls'] = ['a'] ==> item['image_url'] = 'a'
+
+IMAGES RESULT FIELD
+    item['image_paths'] = ['a.jpg'] ==> item['image_path'] = 'a.jpg'
+
 
 Install
 ----------
 
 The quick way:
 
-    pip install scrapy-custom-imagepipeline
+    pip install scrapy-singleimagepipeline
 
 Or checkout the source and run
 
     python setup.py install
 
 
-Examples
+Examples Output
 ----------
 
-0 Each Item has x images downloaded and x images saved
-
-    id     | image_paths                         | image_thumbs     | image_names | image_urls        
+    id     | image_path                          | image_thumb      | image_name  | image_url
     ------------------------------------------------------------------------------------------------------------------------
-    1      | ['full/1.jpg','thumbs/small/1.jpg'] | ['full','small'] | ['1','1']   | ['http://big.jpg','http://small.jpg']   
-    2      | ['full/sum1.jpg','full/sum2.jpg']   | ['full','full']  | []          | ['http://big.jpg','http://small.jpg']
-    3      | ['full/1.jpg']                      | ['full','small'] | ['1','1']   | ['http://big.jpg'] 
-    4      | ['full/1.jpg','full/sum.jpg']       | ['full','full']  | ['1']       | ['http://big.jpg','http://small.jpg']  
-    5      | ['full/1.jpg','thumbs/small/1.jpg'] | ['full','small'] | ['1']       | ['http://big.jpg','http://big.jpg']   
-    6      | ['full/1.jpg','full/1.jpg']         | ['full','full']  | ['1']       | ['http://big.jpg','http://small.jpg']   
-
-1 Each Item has only one image downloaded and only one image saved
-
-    Different size of images available for download
-
-    id     | image_paths                         | image_thumbs     | image_names | image_urls        
-    ------------------------------------------------------------------------------------------------------------------------
-    1      | full/1.jpg                          | full             | 1           | http://big.jpg   
-    2      | thumbs/small/1.jpg                  | small            | 1           | http://small.jpg 
-    3      | thumbs/small/sum.jpg                | small            |             | http://small.jpg 
+    1      | foo/full/1.jpg                | full             | 1           | http://full.jpg
+    2      | foo/thumbs/small/1.jpg        | small            | 1           | http://small.jpg
+    3      | foo/thumbs/small/checksum.jpg | small            |             | http://small.jpg
+    4      | foo/full/checksum.jpg         |                  |             | http://small.jpg
 
 Settings
 ----------
 
-Please refer to https://doc.scrapy.org/en/latest/topics/media-pipeline.html for other image settings.
+Please refer to https://doc.scrapy.org/en/latest/topics/media-pipeline.html#using-the-images-pipeline for other image settings.
 
-    # CUSTOM MODE
-    # 0, 1
-    IMAGES_PIPELINE_MODE = 0
-
-    # FILENAME RENAME
+    # IMAGE RENAME
     IMAGES_RENAME = False
 
     # FIELD FOR UPDATE THE FILENAME
-    IMAGES_NAMES_FIELD = 'image_names'
-    
-    # THUMB GENERATION (This will REALLY generate a thumbnail depends on its `IMAGES_THUMBS_PATH_FIELD`)
+    # PLEASE REMINDED THAT I DO NOT HANDLE FOR DUPLICATE FILENAME
+    IMAGES_NAMES_FIELD = 'image_name'
+
+    # IMAGE THUMB RESIZE
+    # IF TRUE, ALSO SET THE IMAGES_THUMBS PARAMETER
+    # IMAGE RESIZES BASE ON IMAGES_THUMB_FIELD
     IMAGES_THUMBS_RESIZE = False
+    IMAGES_THUMBS = {
+        'small': (60, 60),
+        'big': (600, 600),
+    }
 
     # FIELD FOR UPDATE THE STORAGE DIRECOTORY
-    IMAGES_THUMBS_PATH_FIELD = 'image_thumbs'
+    IMAGES_THUMBS_FIELD = 'image_thumb'
 
-
-spider.py
-----------
-
+    ITEM_PIPELINES = {
+        ...
+        'scrapy.pipelines.images.ImagesPipeline': None,
+        'singleimagepipeline.images.SingleImagePipeline': 1,
+        ...
+    }
