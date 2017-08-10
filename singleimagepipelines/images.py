@@ -100,7 +100,6 @@ class SingleImagePipeline(ImagesPipeline):
             response, request, info
         ):
             if self.images_thumb_resize and thumb_id != self.DEFAULT_IMAGE_THUMB_ID:
-                :
                 image, buf = super(SingleImagePipeline, self).convert_image(
                     image, self.custom_thumbs[thumb_id]
                 )
@@ -109,7 +108,6 @@ class SingleImagePipeline(ImagesPipeline):
     def item_completed(self, results, item, info):
         if isinstance(item, dict) or self.image_result_field in item.fields:
             image_paths = [x['path'] for ok, x in results if ok]
-            log.info('{} Image saved succesfully'.format(len(image_paths)))
             if image_paths:
                 item[self.image_result_field] = image_paths[0]
         return item
