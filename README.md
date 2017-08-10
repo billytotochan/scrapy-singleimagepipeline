@@ -31,6 +31,7 @@ Examples Output
     2      | foo/thumbs/small/1.jpg        | small            | 1           | http://small.jpg
     3      | foo/thumbs/small/checksum.jpg | small            |             | http://small.jpg
     4      | foo/full/checksum.jpg         |                  |             | http://small.jpg
+    5      | foo/full/checksum.jpg         |                  | 1           | http://no_rename.jpg
 
 Settings
 ----------
@@ -41,7 +42,7 @@ Please refer to https://doc.scrapy.org/en/latest/topics/media-pipeline.html#usin
     IMAGES_RENAME = False
 
     # FIELD FOR UPDATE THE FILENAME
-    # PLEASE REMINDED THAT I DO NOT HANDLE FOR DUPLICATE FILENAME
+    # PLEASE REMIND THAT I DO NOT HANDLE FOR DUPLICATE FILENAME
     IMAGES_NAMES_FIELD = 'image_name'
 
     # IMAGE THUMB RESIZE
