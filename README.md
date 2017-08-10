@@ -28,7 +28,7 @@ Or checkout the source and run
 Examples Output
 ----------
 
-    id     | image_path                          | image_thumb      | image_name  | image_url
+    id     | image_path                    | image_thumb      | image_name  | image_url
     ------------------------------------------------------------------------------------------------------------------------
     1      | foo/full/1.jpg                | full             | 1           | http://full.jpg
     2      | foo/thumbs/small/1.jpg        | small            | 1           | http://small.jpg
