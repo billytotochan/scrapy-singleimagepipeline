@@ -1,7 +1,7 @@
 Single Image Pipeline for Scrapy
 ==================================================
 
-CHANGES FROM OFFICIAL TO MINE
+Why multiple images store together in one item?
 
 IMAGES_STORE
 
