@@ -123,13 +123,18 @@ class SingleImagePipeline(ImagesPipeline):
         if self.converted_original.match(path):
             if (self.images_rename) and (name_id != self.DEFAULT_IMAGE_NAME):
                 path = self.update_file_name(name_id)
+
+            path = prepend_path(path, spider_name)
             if thumb_id != self.DEFAULT_IMAGE_THUMB_ID:
                 path = self.update_thumbpath(path, thumb_id)
         log.debug('Image will be saved ==> {}'.format(path))
         return path
 
+    def prepend_path(self, path, spider_name):
+        return path.replace('full', spider_name + '/full')
+
     def update_thumb_path(self, path, thumb_id):
-        return path.replace('full', 'thumbs/' + thumb_id)
+        return path.replace('/full', '/thumbs/' + thumb_id)
 
     def update_file_name(self, name):
         return 'full/{}.jpg'.format(name)
