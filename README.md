@@ -19,13 +19,7 @@ IMAGES RESULT FIELD
 Install
 ----------
 
-The quick way:
-
     pip install scrapy-singleimagepipeline
-
-Or checkout the source and run
-
-    python setup.py install
 
 
 Examples Output
