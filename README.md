@@ -4,12 +4,15 @@ Single Image Pipeline for Scrapy
 CHANGES FROM OFFICIAL TO MINE
 
 IMAGES_STORE
+
     <IMAGES_STORE>/full/<image_id>.jpg ==> <IMAGES_STORE>/<SPIDER_NAME>/full/<image_id>.jpg
 
 IMAGES URLS FIELD
+
     item['image_urls'] = ['a'] ==> item['image_url'] = 'a'
 
 IMAGES RESULT FIELD
+
     item['image_paths'] = ['a.jpg'] ==> item['image_path'] = 'a.jpg'
 
 
