@@ -8,50 +8,48 @@ from scrapy.pipelines.images import ImagesPipeline
 
 log = logging.getLogger('scrapy.pipelines.image.custom')
 
-class Mode:
-    ORIGINAL = 0
-    ONE_IMAGE_ONE_THUMB = 1
-    MULTIPLE_IMAGES_MULTIPLE_THUMBS = 2
-
-class CustomImagesPipeline(ImagesPipeline):
+class SingleImagePipeline(ImagesPipeline):
     CONVERTED_ORIGINIAL = re.compile('^full/[0-9,a-f]+.jpg$')
-    DEFAULT_IMAGES_THUMBS_FIELD = 'image_thumbs'
-    DEFAULT_IMAGE_THUMB_ID = 'full'
-    DEFAULT_IMAGES_NAMES_FIELD = 'image_names'
+
+    DEFAULT_IMAGE_URL_FIELD = 'image_url'
+    DEFAULT_IMAGE_PATH_FIELD = 'image_path'
+    DEFAULT_IMAGE_THUMB_FIELD = 'image_thumb'
+    DEFAULT_IMAGE_NAME_FIELD = 'image_name'
+
+    DEFAULT_IMAGE_THUMB = 'full'
     DEFAULT_IMAGE_NAME = 'iF-NamE-eqUAL-mE-uSE-deFaULT-chECKsuM-aS-fiLEnaME'
 
     def __init__(self, store_uri, download_func=None, settings=None):
-        super(CustomImagesPipeline, self).__init__(
-            store_uri, 
+        super(SingleImagePipeline, self).__init__(
+            store_uri,
             settings=settings,
             download_func=download_func
         )
-        
+
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
 
-        self.thumbs_resize = settings.get('IMAGES_THUMBS_RESIZE', False)
-        self.rename = settings.get('IMAGES_RENAME', False)
-        self.mode = settings.get('IMAGES_PIPELINE_MODE', Mode.ORIGINAL)
+        self.image_thumb_resize = settings.get('IMAGE_THUMB_RESIZE', False)
+        self.image_rename = settings.get('IMAGE_RENAME', False)
 
-        if not hasattr(self, 'IMAGES_THUMBS_FIELD'):
-            self.IMAGES_THUMBS_FIELD = self.DEFAULT_IMAGES_THUMBS_FIELD
+        if not hasattr(self, 'IMAGE_THUMB_FIELD'):
+            self.IMAGE_THUMB_FIELD = self.DEFAULT_IMAGE_THUMB_FIELD
 
-        if not hasattr(self, 'IMAGES_NAMES_FIELD'):
-            self.IMAGES_NAMES_FIELD = self.DEFAULT_IMAGES_NAMES_FIELD
+        if not hasattr(self, 'IMAGE_NAME_FIELD'):
+            self.IMAGE_NAME_FIELD = self.DEFAULT_IMAGE_NAME_FIELD
 
-        self.images_thumbs_field = settings.get(
-            'IMAGES_THUMBS_FIELD',
-            self.IMAGES_THUMBS_FIELD
+        self.image_thumb_field = settings.get(
+            'IMAGE_THUMB_FIELD',
+            self.IMAGE_THUMB_FIELD
         )
 
-        self.images_names_field = settings.get(
-            'IMAGES_NAMES_FIELD',
-            self.IMAGES_NAMES_FIELD
+        self.image_name_field = settings.get(
+            'IMAGE_NAME_FIELD',
+            self.IMAGE_NAME_FIELD
         )
 
         if (self.thumbs_resize) and (self.thumbs is None):
-            raise KeyError('IMAGES_THUMBS setting is missing')
+            raise KeyError('IMAGE_THUMBS setting is missing')
 
         self.custom_thumbs = self.thumbs
         self.thumbs = {}
@@ -60,7 +58,7 @@ class CustomImagesPipeline(ImagesPipeline):
         try:
             if self.mode == Mode.ONE_IMAGE_ONE_THUMB:
                 image_url = item.get(
-                    self.images_urls_field, ''
+                    self.image_url_field, ''
                 )
                 image_thumb = item.get(
                     self.image_thumb_field, self.DEFAULT_IMAGE_THUMB_ID
@@ -74,53 +72,56 @@ class CustomImagesPipeline(ImagesPipeline):
                     'image_name': image_name
                 })
 
-            elif self.mode == Mode.MULTIPLE_IMAGES_MULTIPLE_THUMBS:
-                image_urls = item.get(self.images_urls_field, [])
-                image_thumbs = item.get(self.images_thumbs_field, [])
-                image_thumbs = map(lambda x, y: y if x is None else x, 
-                    image_thumbs, [DEFAULT_IMAGE_THUMB_ID]*len(image_urls))
-                image_names = item.get(self.images_names_field, [])
-                image_names = map(lambda x, y: y if x is None else x, 
-                    image_names, [DEFAULT_IMAGE_NAME]*len(image_urls))
+            elif self.mode == Mode.MULTIPLE_IMAGE_MULTIPLE_THUMBS:
+                image_urls = item.get(self.image_url_field, [])
+                image_thumbs = item.get(self.image_thumb_field, [])
+                image_thumbs = map(lambda x, y: y if x is None else x,
+                                   image_thumbs, [DEFAULT_IMAGE_THUMB_ID] * len(image_urls))
+                image_names = item.get(self.image_name_field, [])
+                image_names = map(lambda x, y: y if x is None else x,
+                                  image_names, [DEFAULT_IMAGE_NAME] * len(image_urls))
 
                 return [Request(u, meta={
-                    'image_thumb': i, 
+                    'image_thumb': i,
                     'image_name': n
                 }) for u, i, n in zip(image_urls, image_thumbs, image_names)]
             else:
-                return [Request(x) for x in item.get(self.images_urls_field, [])]
+                return [Request(x) for x in item.get(self.image_url_field, [])]
         except KeyError:
-            log.warning('Item doesn\'t have field : {}'.format(self.images_urls_field))
+            log.warning('Item doesn\'t have field : {}'.format(
+                self.image_url_field))
             pass
 
     def get_images(self, response, request, info):
         thumb_id = response.meta['image_thumb']
-        for path, image, buf in super(CustomImagesPipeline, self).get_images(
-                response, request, info
-            ):
-            if self.thumbs_resize and thumb_id != self.DEFAULT_IMAGE_THUMB_ID::
-                image, buf = super(CustomImagesPipeline, self).convert_image(
+        for path, image, buf in super(SingleImagePipeline, self).get_images(
+            response, request, info
+        ):
+            if self.thumbs_resize and thumb_id != self.DEFAULT_IMAGE_THUMB_ID:
+                :
+                image, buf = super(SingleImagePipeline, self).convert_image(
                     image, self.custom_thumbs[thumb_id]
                 )
             yield path, image, buf
 
     def item_completed(self, results, item, info):
-        if isinstance(item, dict) or self.images_result_field in item.fields:
+        if isinstance(item, dict) or self.image_result_field in item.fields:
             if self.mode == Mode.ONE_IMAGE_ONE_THUMB:
                 image_paths = [x['path'] for ok, x in results if ok]
                 log.info('{} Image saved succesfully'.format(len(image_paths)))
                 if image_paths:
-                    item[self.images_result_field] = image_paths[0]
-            elif self.mode == Mode.MULTIPLE_IMAGES_MULTIPLE_THUMBS:
+                    item[self.image_result_field] = image_paths[0]
+            elif self.mode == Mode.MULTIPLE_IMAGE_MULTIPLE_THUMBS:
                 image_paths = [x['path'] for ok, x in results if ok]
                 log.info('{} Images saved succesfully'.format(len(image_paths)))
-                item[self.images_result_field] = image_paths
+                item[self.image_result_field] = image_paths
             else:
-                item[self.images_result_field] = [x['path'] for ok, x in results if ok]
+                item[self.image_result_field] = [x['path']
+                                                  for ok, x in results if ok]
         return item
 
     def file_path(self, request, response=None, info=None):
-        path = super(CustomImagesPipeline, self).file_path(
+        path = super(SingleImagePipeline, self).file_path(
             request, response=response, info=info
         )
         thumb_id = response.meta['image_thumb']
@@ -134,7 +135,7 @@ class CustomImagesPipeline(ImagesPipeline):
         return path
 
     def update_thumb_path(self, path, thumb_id):
-        return path.replace('full', 'thumbs/'+thumb_id)
+        return path.replace('full', 'thumbs/' + thumb_id)
 
     def update_file_name(self, name):
         return 'full/{}.jpg'.format(name)
